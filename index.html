@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Alitas ULV · Pedidos por chat (Demo)</title><meta name="theme-color" content="#c8102e">
+<style>
+:root{--r:#c8102e;--o:#ff7a00;--y:#ffc629;--bg:#fff6ec;--ink:#2a1a12}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#1d0f09;color:var(--ink);display:flex;justify-content:center;min-height:100dvh}
+.app{width:100%;max-width:430px;height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
+header{background:linear-gradient(135deg,var(--r),var(--o));color:#fff;padding:12px 14px;display:flex;gap:11px;align-items:center;box-shadow:0 2px 10px #0003;z-index:2}
+.av{width:44px;height:44px;border-radius:50%;background:var(--y);display:grid;place-items:center;font-size:24px;border:2px solid #fff}
+header b{font-size:17px;display:block}header small{font-size:12px;opacity:.9}.dot{display:inline-block;width:8px;height:8px;background:#7CFF8A;border-radius:50%;margin-right:4px}
+.badge{margin-left:auto;background:#fff3;padding:4px 8px;border-radius:12px;font-size:11px;font-weight:600}
+#chat{flex:1;overflow-y:auto;padding:14px 12px 8px;background-image:radial-gradient(#f3d9bf 1.2px,transparent 1.2px);background-size:18px 18px}
+.m{max-width:84%;padding:9px 12px;border-radius:16px;margin:6px 0;font-size:15px;line-height:1.38;animation:in .25s ease;white-space:pre-line;box-shadow:0 1px 2px #0001}
+.bot{background:#fff;border-top-left-radius:4px}.me{background:#ffe2c4;margin-left:auto;border-top-right-radius:4px}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.t{font-size:10px;opacity:.5;text-align:right;margin-top:3px}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 10px}
+.btns button{border:1.5px solid var(--r);background:#fff;color:var(--r);padding:9px 13px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer}
+.btns button:active{background:var(--r);color:#fff}.btns.used button{opacity:.4;pointer-events:none}
+.card{background:#fff;border-radius:14px;overflow:hidden;margin:6px 0;max-width:88%;box-shadow:0 1px 3px #0002}
+.card .hd{background:linear-gradient(135deg,var(--y),var(--o));padding:10px 12px;font-weight:800;color:var(--ink)}
+.row{display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px dashed #eedccb;font-size:14px}.row:last-child{border:0}
+.tot{font-weight:800;color:var(--r)}
+.typing{background:#fff;width:58px;padding:12px;border-radius:16px;margin:6px 0}.typing i{display:inline-block;width:7px;height:7px;background:#bbb;border-radius:50%;margin:0 2px;animation:b 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{transform:translateY(-4px)}}
+form{display:flex;gap:8px;padding:8px 10px;background:#fff;border-top:1px solid #eee}
+input{flex:1;border:1px solid #e3cbb5;border-radius:22px;padding:11px 14px;font-size:15px;outline:none}
+form button{width:44px;height:44px;border-radius:50%;border:0;background:var(--r);color:#fff;font-size:18px}
+.foot{font-size:11px;text-align:center;padding:5px 0 calc(6px + env(safe-area-inset-bottom));background:#fff;color:#8a6a55}
+.note{font-size:11px;text-align:center;color:#9a7158;background:#fff8;border-radius:10px;padding:5px 8px;margin:0 auto 8px;width:fit-content}
+</style></head><body><div class="app">
+<header><div class="av">🍗</div><div><b>Alitas ULV</b><small><span class="dot"></span>¡El amor frito! · responde al instante</small></div><span class="badge">DEMO</span></header>
+<div id="chat"><div class="note">💡 Precios de ejemplo · Demo de asistente automático</div></div>
+<form id="f"><input id="i" placeholder="Escribe un mensaje…" autocomplete="off"><button>➤</button></form>
+<div class="foot">Demo hecha por <b>Eduardo García Soluciones</b></div></div>
+<script>
+const P={alitas:{n:"Alitas",e:"🍗",o:[["10 pzs",120],["20 pzs",225],["30 pzs",320]]},boneless:{n:"Boneless",e:"🔥",o:[["250 g",110],["500 g",205]]},charola:{n:"Charola mixta",e:"🧺",o:[["Alitas + boneless + papas",160],["Charola familiar",290]]},salchi:{n:"Salchipulpos",e:"🐙",o:[["Orden",70],["Orden con papas",95]]},papas:{n:"Papas",e:"🍟",o:[["Francesas",50],["Gajo",60]]},refresco:{n:"Refresco",e:"🥤",o:[["600 ml",30],["2 L",48]]}};
+const SAB=["Hot 🌶️","Pimienta y limón 🍋","BBQ","Mango habanero 🥭","Búfalo"],SABQ=["alitas","boneless","charola","salchi"];
+const c=document.getElementById("chat");let cart=[],cur={},addr="",await_=null;
+const now=()=>new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
+const sc=()=>c.scrollTo({top:c.scrollHeight,behavior:"smooth"});
+function el(h,cl){const d=document.createElement("div");d.className=cl;d.innerHTML=h;c.appendChild(d);sc();return d}
+function me(t){el(t+'<div class="t">'+now()+' ✓✓</div>',"m me")}
+function bot(t,b,card){return new Promise(r=>{const ty=el("<i></i><i></i><i></i>","typing");setTimeout(()=>{ty.remove();if(t)el(t+'<div class="t">'+now()+'</div>',"m bot");if(card)el(card,"card");if(b)btns(b);r()},650)})}
+function btns(l){const d=el("","btns");l.forEach(([t,f])=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{d.classList.add("used");me(t);f()};d.appendChild(b)});sc()}
+const $=n=>"$"+n.toLocaleString("es-MX");
+const total=()=>cart.reduce((s,x)=>s+x.p*x.q,0);
+const ENVIO=25;
+function menu(){bot("¿En qué te ayudo? 👇",[["📋 Ver menú",verMenu],["🛒 Hacer pedido",pedir],["🎉 Promociones",promos],["🕒 Horario y zona",horario],["🙋 Hablar con una persona",humano]])}
+function verMenu(){let h='<div class="hd">🍗 Menú Alitas ULV</div>';for(const k in P)P[k].o.forEach(([o,p])=>h+=`<div class="row"><span>${P[k].e} ${P[k].n} · ${o}</span><b>${$(p)}</b></div>`);h+='<div class="row"><span>Sabores: Hot, Pimienta y limón, BBQ, Mango habanero, Búfalo</span></div>';bot("Aquí va nuestro menú 😋 (precios de ejemplo)",[["🛒 Hacer pedido",pedir],["⬅️ Menú principal",menu]],h)}
+function pedir(){bot("¡Va! ¿Qué se te antoja? 🤤",Object.keys(P).map(k=>[P[k].e+" "+P[k].n,()=>prod(k)]))}
+function prod(k){cur={k};bot(`${P[k].n}, buena elección. ¿Qué tamaño?`,P[k].o.map(([o,p])=>[`${o} · ${$(p)}`,()=>{cur.o=o;cur.p=p;SABQ.includes(k)?sabor():cant()}]))}
+function sabor(){bot("¿De qué sabor? 🔥",SAB.map(s=>[s,()=>{cur.s=s;cant()}]))}
+function cant(){bot("¿Cuántas órdenes?",[1,2,3,4].map(n=>[String(n),()=>{cart.push({n:P[cur.k].n,o:cur.o,s:cur.s,p:cur.p,q:n});carrito()}]))}
+function carrito(){let h='<div class="hd">🛒 Tu pedido</div>';cart.forEach(x=>h+=`<div class="row"><span>${x.q}× ${x.n} ${x.o}${x.s?" · "+x.s:""}</span><b>${$(x.p*x.q)}</b></div>`);h+=`<div class="row"><span>Envío Lindavista</span><b>${$(ENVIO)}</b></div><div class="row tot"><span>Total</span><span>${$(total()+ENVIO)}</span></div>`;bot("Listo, lo agregué ✅",[["➕ Agregar algo más",pedir],["✅ Terminar pedido",dir],["🗑️ Vaciar",()=>{cart=[];bot("Carrito vacío 👌");menu()}]],h)}
+function dir(){await_="dir";bot("📍 ¿A qué dirección te lo llevamos? Escríbela con calle, número, colonia y alguna referencia.",[["Usar ejemplo: Av. Montevideo 123, Lindavista",()=>{addr="Av. Montevideo 123, Lindavista";await_=null;pago()}]])}
+function pago(){bot(`Perfecto, lo mandamos a:\n📍 ${addr}\n\n¿Cómo vas a pagar?`,[["💵 Efectivo",()=>conf("Efectivo")],["🏦 Transferencia",()=>conf("Transferencia")],["💳 Tarjeta (terminal)",()=>conf("Tarjeta")]])}
+async function conf(m){const id="ULV-"+Math.floor(1000+Math.random()*9000),T=total()+ENVIO;
+let x=m==="Efectivo"?"¿Necesitas cambio? Dile al repartidor 😉":m==="Transferencia"?"Te enviamos los datos de la cuenta y nos mandas tu comprobante 🧾":"El repartidor lleva terminal 💳";
+await bot(null,null,`<div class="hd">🎉 ¡Pedido confirmado!</div><div class="row"><span>Pedido</span><b>${id}</b></div><div class="row"><span>Pago</span><b>${m}</b></div><div class="row"><span>Entrega</span><b>${addr}</b></div><div class="row tot"><span>Total</span><span>${$(T)}</span></div><div class="row"><span>⏱️ Llega en</span><b>35–45 min</b></div>`);
+cart=[];bot(`¡Gracias! Ya estamos friendo con amor 🍗❤️\n${x}\nTe avisamos cuando salga el repartidor 🛵`,[["🛒 Hacer otro pedido",pedir],["⬅️ Menú principal",menu]])}
+function promos(){bot(`🎉 Promos de la semana (ejemplo):\n\n🔥 Martes de alitas: 20 pzs por $199\n🍗 Combo pareja: 10 alitas + boneless 250 g + papas = $249\n🥤 Refresco 2 L de regalo en pedidos de más de $350`,[["🛒 Hacer pedido",pedir],["⬅️ Menú principal",menu]])}
+function horario(){bot(`🕒 Horario: martes a domingo, 1:00 pm a 10:30 pm\n🛵 Entregamos en Lindavista y colonias cercanas (envío ${$(ENVIO)})\n💵 Efectivo · 🏦 Transferencia · 💳 Tarjeta\n📞 Pedidos: 55 7360 0991`,[["🛒 Hacer pedido",pedir],["⬅️ Menú principal",menu]])}
+function humano(){bot("Claro 🙌 Te comunico con alguien del equipo, en unos minutos te responde aquí mismo. Mientras, ¿quieres ver el menú?",[["📋 Ver menú",verMenu],["⬅️ Menú principal",menu]])}
+document.getElementById("f").onsubmit=e=>{e.preventDefault();const i=document.getElementById("i"),v=i.value.trim();if(!v)return;i.value="";me(v);
+if(await_==="dir"){addr=v;await_=null;pago();return}
+const l=v.toLowerCase();if(/menu|menú|precio/.test(l))verMenu();else if(/pedi|quiero|orden/.test(l))pedir();else if(/promo/.test(l))promos();else if(/hora|zona|envío|envio/.test(l))horario();else if(/persona|humano|asesor/.test(l))humano();else{bot("¡Hola! 👋 Bienvenid@ a Alitas ULV, ¡el amor frito! 🍗❤️");menu()}};
+bot("¡Hola! 👋 Bienvenid@ a *Alitas ULV* 🍗❤️\nSoy el asistente de pedidos. Pide en segundos, sin esperar.".replace(/\*(.*?)\*/g,"<b>$1</b>")).then(menu);
+</script></body></html>
